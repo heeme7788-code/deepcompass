@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생성형AI 에이전트 활용교육 특강 | DeepCompass AI연구소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Montserrat:wght@900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0D1B2E;
+    --navy-mid: #1E3A5F;
+    --cyan: #00C8E8;
+    --cyan-dim: rgba(0,200,232,0.15);
+    --cyan-border: rgba(0,200,232,0.35);
+    --gold: #C9A84C;
+    --gold-dim: rgba(201,168,76,0.15);
+    --blue: #1B8BC9;
+    --white: #F0F6FF;
+    --muted: rgba(240,246,255,0.55);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ─── DECORATIVE CIRCLES ─── */
+  .deco-circle {
+    position: absolute; border-radius: 50%;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ══════════════════════════════════════
+     Z-ZONE 1: TOP BAR (left → right)
+  ══════════════════════════════════════ */
+  .topbar {
+    position: relative; z-index: 10;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 1.25rem 3rem;
+    border-bottom: 1px solid var(--cyan-border);
+    background: rgba(13,27,46,0.9);
+    backdrop-filter: blur(8px);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .logo-mark {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px; font-weight: 900;
+    color: var(--navy);
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+  .logo-text {
+    display: flex; flex-direction: column; line-height: 1.1;
+  }
+  .logo-text .primary {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px; font-weight: 900;
+    color: var(--cyan);
+    letter-spacing: 0.5px;
+  }
+  .logo-text .sub {
+    font-size: 10px; color: var(--muted);
+    letter-spacing: 0.3px;
+  }
+
+  .topbar-badge {
+    display: flex; align-items: center; gap: 0.5rem;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .cta-top {
+    background: var(--cyan);
+    color: var(--navy);
+    font-weight: 700; font-size: 13px;
+    padding: 0.6rem 1.4rem;
+    border: none; border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .cta-top:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,200,232,0.4);
+  }
+
+  /* ══════════════════════════════════════
+     Z-ZONE 2: HERO — diagonal center
+  ══════════════════════════════════════ */
+  .hero {
+    position: relative; z-index: 1;
+    overflow: hidden;
+    min-height: 80vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 0;
+    padding: 5rem 3rem 4rem;
+  }
+
+  /* decorative circles on dark slides */
+  .hero .deco-circle:nth-child(1) {
+    width: 500px; height: 500px;
+    background: rgba(26,42,94,0.5);
+    top: -100px; right: -80px;
+  }
+  .hero .deco-circle:nth-child(2) {
+    width: 280px; height: 280px;
+    background: rgba(37,47,110,0.4);
+    bottom: -60px; left: 38%;
+  }
+  .hero-cyan-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,200,232,0.07) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    pointer-events: none;
+  }
+
+  .hero-left {
+    position: relative; z-index: 5;
+    display: flex; flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .tag-row {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+  }
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .tag-cyan { color: var(--cyan); border-color: var(--cyan-border); background: var(--cyan-dim); }
+  .tag-gold { color: var(--gold); border-color: rgba(201,168,76,0.35); background: var(--gold-dim); }
+
+  .hero-title {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+  }
+  .hero-title .line-cyan { color: var(--cyan); }
+  .hero-title .line-white { color: var(--white); }
+  .hero-title .line-gold { color: var(--gold); }
+
+  .hero-sub {
+    font-size: 1rem; line-height: 1.7;
+    color: rgba(240,246,255,0.75);
+    max-width: 460px;
+  }
+  .hero-sub strong { color: var(--cyan); font-weight: 700; }
+
+  .hero-meta {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    padding: 1rem 1.2rem;
+    background: rgba(0,200,232,0.06);
+    border: 1px solid var(--cyan-border);
+    border-radius: 10px;
+    max-width: 400px;
+  }
+  .hero-meta-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.88rem; color: var(--white);
+  }
+  .meta-icon {
+    font-size: 14px; color: var(--cyan); flex-shrink: 0;
+    width: 18px;
+  }
+  .meta-label { color: var(--muted); font-size: 0.8rem; min-width: 36px; }
+
+  /* right side — decorative visual */
+  .hero-right {
+    position: relative; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .agent-card {
+    width: 340px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--cyan-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .agent-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+  .agent-card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    color: var(--cyan); margin-bottom: 1rem;
+  }
+  .curriculum-list {
+    display: flex; flex-direction: column; gap: 0.55rem;
+  }
+  .curriculum-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    font-size: 0.82rem; color: rgba(240,246,255,0.8);
+    line-height: 1.4;
+  }
+  .curr-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--cyan);
+    min-width: 20px; padding-top: 2px;
+  }
+  .price-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    margin-top: 1.2rem;
+    background: var(--gold-dim);
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+  .price-amount {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.4rem; font-weight: 900;
+    color: var(--gold);
+  }
+  .price-unit { font-size: 0.8rem; color: var(--muted); }
+
+  /* ══════════════════════════════════════
+     Z-ZONE 3: FEATURES strip
+  ══════════════════════════════════════ */
+  .features-strip {
+    position: relative; z-index: 5;
+    background: rgba(0,200,232,0.05);
+    border-top: 1px solid var(--cyan-border);
+    border-bottom: 1px solid var(--cyan-border);
+    padding: 2rem 3rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+  .feature-item {
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  }
+  .feature-icon-wrap {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--cyan-dim);
+    border: 1px solid var(--cyan-border);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 0.2rem;
+  }
+  .feature-icon { font-size: 20px; }
+  .feature-label {
+    font-size: 0.8rem; font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.3px;
+  }
+  .feature-sub { font-size: 0.72rem; color: var(--muted); }
+
+  /* ══════════════════════════════════════
+     Z-ZONE 4: CURRICULUM GRID
+  ══════════════════════════════════════ */
+  .section {
+    position: relative; z-index: 5;
+    padding: 4rem 3rem;
+  }
+
+  .section-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    color: var(--cyan); margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--white); margin-bottom: 2.5rem;
+    letter-spacing: -0.5px;
+  }
+
+  .curriculum-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .curr-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(240,246,255,0.1);
+    border-radius: 12px;
+    padding: 1.2rem 1.3rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .curr-card:hover {
+    border-color: var(--cyan-border);
+    background: rgba(0,200,232,0.05);
+  }
+  .curr-card-num {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2rem; font-weight: 900;
+    color: rgba(0,200,232,0.2);
+    line-height: 1; margin-bottom: 0.5rem;
+  }
+  .curr-card-title {
+    font-size: 0.9rem; font-weight: 700;
+    color: var(--cyan); margin-bottom: 0.4rem;
+  }
+  .curr-card-desc {
+    font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+  }
+
+  /* ══════════════════════════════════════
+     Z-ZONE 5: INSTRUCTOR (light strip)
+  ══════════════════════════════════════ */
+  .instructor-strip {
+    position: relative; z-index: 5;
+    background: rgba(30,58,95,0.3);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 3rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  .instructor-avatar {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2rem; font-weight: 900;
+    color: var(--navy);
+    flex-shrink: 0;
+    border: 3px solid var(--cyan);
+  }
+  .instructor-name {
+    font-size: 1.3rem; font-weight: 900;
+    color: var(--white); margin-bottom: 0.2rem;
+  }
+  .instructor-title-text {
+    font-size: 0.85rem; color: var(--cyan); margin-bottom: 0.6rem;
+  }
+  .instructor-desc {
+    font-size: 0.83rem; color: rgba(240,246,255,0.7);
+    line-height: 1.6; max-width: 560px;
+  }
+  .badge-row {
+    display: flex; gap: 0.4rem; margin-top: 0.8rem; flex-wrap: wrap;
+  }
+  .ibadge {
+    font-size: 0.72rem; padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    background: rgba(0,200,232,0.12);
+    border: 1px solid var(--cyan-border);
+    color: var(--cyan);
+  }
+
+  /* ══════════════════════════════════════
+     Z-ZONE 6: FINAL CTA (bottom-right)
+  ══════════════════════════════════════ */
+  .cta-section {
+    position: relative; z-index: 5;
+    padding: 5rem 3rem;
+    text-align: center;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute; width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(0,200,232,0.08) 0%, transparent 65%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    pointer-events: none;
+  }
+  .cta-headline {
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 900; color: var(--white);
+    line-height: 1.2; margin-bottom: 0.8rem;
+    letter-spacing: -1px;
+  }
+  .cta-headline .accent { color: var(--cyan); }
+  .cta-sub {
+    font-size: 1rem; color: var(--muted);
+    max-width: 480px; margin: 0 auto 2.5rem;
+    line-height: 1.6;
+  }
+  .cta-main {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    gap: 0.6rem;
+    background: var(--cyan);
+    color: var(--navy);
+    font-weight: 900; font-size: 1.1rem;
+    padding: 1rem 2.5rem;
+    border-radius: 10px;
+    border: none; cursor: pointer;
+    letter-spacing: 0.2px;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.2s;
+    position: relative; z-index: 2;
+  }
+  .cta-main:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 40px rgba(0,200,232,0.45);
+  }
+  .cta-arrow {
+    font-size: 1.2rem; transition: transform 0.2s;
+  }
+  .cta-main:hover .cta-arrow { transform: translateX(4px); }
+
+  .cta-detail {
+    margin-top: 1.5rem;
+    display: flex; align-items: center; justify-content: center;
+    gap: 1.5rem; flex-wrap: wrap;
+  }
+  .cta-detail-item {
+    font-size: 0.82rem; color: var(--muted);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .cta-detail-item .dot { color: var(--cyan); }
+
+  /* ══════════════════════════════════════
+     FOOTER
+  ══════════════════════════════════════ */
+  footer {
+    position: relative; z-index: 5;
+    padding: 1.5rem 3rem;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.75rem; color: rgba(240,246,255,0.35);
+  }
+
+  /* ──────── ANIMATIONS ──────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-left { animation: fadeUp 0.7s ease both; }
+  .hero-right { animation: fadeUp 0.7s 0.2s ease both; }
+  .features-strip { animation: fadeUp 0.6s 0.35s ease both; }
+
+  /* ──────── RESPONSIVE ──────── */
+  @media (max-width: 900px) {
+    .topbar { padding: 1rem 1.5rem; }
+    .hero { grid-template-columns: 1fr; padding: 3rem 1.5rem; min-height: auto; }
+    .hero-right { display: none; }
+    .features-strip { grid-template-columns: repeat(2,1fr); padding: 1.5rem; }
+    .curriculum-grid { grid-template-columns: 1fr; }
+    .instructor-strip { grid-template-columns: 1fr; text-align: center; padding: 2rem 1.5rem; }
+    .instructor-avatar { margin: 0 auto; }
+    .badge-row { justify-content: center; }
+    .section { padding: 2.5rem 1.5rem; }
+    .cta-section { padding: 3rem 1.5rem; }
+    footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════ Z-POINT 1: TOP-LEFT LOGO ══════ -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">DC</div>
+    <div class="logo-text">
+      <span class="primary">DEEPCOMPASS AI</span>
+      <span class="sub">딥컴퍼스 AI 연구소</span>
+    </div>
+  </div>
+
+  <div class="topbar-badge">
+    <span class="live-dot"></span>
+    2026.05.29 (금) 특강 모집 중
+  </div>
+
+  <!-- ══════ Z-POINT 2: TOP-RIGHT CTA ══════ -->
+  <a href="#cta-anchor" class="cta-top">무료 신청하기 →</a>
+</header>
+
+<!-- ══════ Z-POINT 3: HERO DIAGONAL CENTER ══════ -->
+<section class="hero">
+  <div class="deco-circle" style="width:500px;height:500px;background:rgba(26,42,94,0.5);top:-100px;right:-80px;"></div>
+  <div class="deco-circle" style="width:280px;height:280px;background:rgba(37,47,110,0.4);bottom:-60px;left:38%;"></div>
+  <div class="hero-cyan-glow"></div>
+
+  <div class="hero-left">
+    <div class="tag-row">
+      <span class="tag tag-cyan">🚀 특강 · 오프라인+온라인</span>
+      <span class="tag tag-gold">선릉역 4번 출구 2분</span>
+    </div>
+
+    <h1 class="hero-title">
+      <span class="line-white">생성형 AI 에이전트</span><br>
+      <span class="line-cyan">활용교육</span><br>
+      <span class="line-gold">바이브코딩으로</span><br>
+      <span class="line-white">웹사이트를 뽑다</span>
+    </h1>
+
+    <p class="hero-sub">
+      홈페이지 외주에 <strong>수백만 원</strong> 쓰던 시대는 끝났습니다.<br>
+      20년 경력 AI 전문가가 에이전트 사용법부터<br>
+      고퀄리티 웹사이트를 뽑아내는 <strong>마법의 치트키</strong>까지 모두 공개합니다.
+    </p>
+
+    <div class="hero-meta">
+      <div class="hero-meta-row">
+        <span class="meta-icon">📅</span>
+        <span class="meta-label">일시</span>
+        <strong>2026년 5월 29일(금) 오전 10:00 ~ 18:00</strong>
+      </div>
+      <div class="hero-meta-row">
+        <span class="meta-icon">📍</span>
+        <span class="meta-label">장소</span>
+        선릉 더모임 (선릉역 4번 출구 도보 2분 / 파리바게트 건물 B1)
+      </div>
+      <div class="hero-meta-row">
+        <span class="meta-icon">💡</span>
+        <span class="meta-label">형태</span>
+        이론 30% + 실습 70% · 오프라인/온라인 동시진행
+      </div>
+      <div class="hero-meta-row">
+        <span class="meta-icon">💳</span>
+        <span class="meta-label">비용</span>
+        <strong style="color:var(--gold);font-size:1.05rem;">30만 원</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- right: curriculum preview card -->
+  <div class="hero-right">
+    <div class="agent-card">
+      <p class="agent-card-label">CURRICULUM PREVIEW</p>
+      <div class="curriculum-list">
+        <div class="curriculum-item"><span class="curr-num">01</span> 생성형 AI 2026 최신 트렌드</div>
+        <div class="curriculum-item"><span class="curr-num">02</span> 프롬프트 엔지니어링 & 맞춤지침</div>
+        <div class="curriculum-item"><span class="curr-num">03</span> AI 리서치 & 콘텐츠 기획 자동화</div>
+        <div class="curriculum-item"><span class="curr-num">04</span> 이미지 · 영상 · 음원 생성 AI 실전</div>
+        <div class="curriculum-item"><span class="curr-num">05</span> 바이브코딩(Vibe Coding) 입문 ~ 심화</div>
+        <div class="curriculum-item"><span class="curr-num">06</span> 나만의 웹앱 · 챗봇 만들기</div>
+        <div class="curriculum-item"><span class="curr-num">07</span> Claude 스킬 마스터</div>
+        <div class="curriculum-item"><span class="curr-num">08</span> AI 자동화 파이프라인 & GPTs</div>
+        <div class="curriculum-item"><span class="curr-num">09</span> AI 에이전트 패러다임 총정리</div>
+      </div>
+      <div class="price-badge">
+        <span class="price-amount">30만원</span>
+        <span class="price-unit">/ 1일 집중 특강</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ FEATURES STRIP ══════ -->
+<div class="features-strip">
+  <div class="feature-item">
+    <div class="feature-icon-wrap"><span class="feature-icon">🤖</span></div>
+    <div class="feature-label">AI 에이전트 실습</div>
+    <div class="feature-sub">Claude · ChatGPT · Gemini</div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon-wrap"><span class="feature-icon">🎨</span></div>
+    <div class="feature-label">이미지 · 영상 생성</div>
+    <div class="feature-sub">최신 멀티모달 AI 실전</div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon-wrap"><span class="feature-icon">💻</span></div>
+    <div class="feature-label">바이브코딩</div>
+    <div class="feature-sub">코딩 없이 앱·사이트 제작</div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon-wrap"><span class="feature-icon">⚡</span></div>
+    <div class="feature-label">AI 자동화 파이프라인</div>
+    <div class="feature-sub">반복 업무 0으로 만들기</div>
+  </div>
+</div>
+
+<!-- ══════ CURRICULUM SECTION ══════ -->
+<section class="section">
+  <p class="section-eyebrow">CURRICULUM</p>
+  <h2 class="section-title">하루 8시간, 이것을 배웁니다</h2>
+  <div class="curriculum-grid">
+    <div class="curr-card">
+      <div class="curr-card-num">01</div>
+      <div class="curr-card-title">생성형 AI 2026 최신 트렌드</div>
+      <div class="curr-card-desc">GPT-4o, Claude 4, Gemini 2.5 최신 동향과 산업 변화 흐름 파악</div>
+    </div>
+    <div class="curr-card">
+      <div class="curr-card-num">02</div>
+      <div class="curr-card-title">프롬프트 엔지니어링 & 맞춤지침</div>
+      <div class="curr-card-desc">전문가 수준 프롬프트 설계 기법과 커스텀 Instructions 실습</div>
+    </div>
+    <div class="curr-card">
+      <div class="curr-card-num">03</div>
+      <div class="curr-card-title">AI 리서치 & 콘텐츠 기획 자동화</div>
+      <div class="curr-card-desc">에이전트로 리서치부터 콘텐츠 기획까지 완전 자동화 파이프라인 구축</div>
+    </div>
+    <div class="curr-card">
+      <div class="curr-card-num">04</div>
+      <div class="curr-card-title">이미지 · 영상 · 음원 생성 AI 실전</div>
+      <div class="curr-card-desc">Midjourney, Sora, Suno 등 최신 멀티모달 AI 도구 핸즈온 실습</div>
+    </div>
+    <div class="curr-card">
+      <div class="curr-card-num">05</div>
+      <div class="curr-card-title">바이브코딩 입문 ~ 심화</div>
+      <div class="curr-card-desc">Cursor, Lovable, Bolt 활용. 코딩 없이 고퀄리티 웹사이트·앱 제작</div>
+    </div>
+    <div class="curr-card">
+      <div class="curr-card-num">06</div>
+      <div class="curr-card-title">나만의 웹앱 · 챗봇 제작</div>
+      <div class="curr-card-desc">Claude 스킬 마스터 + GPTs 챗봇 + AI 에이전트 패러다임 총정리</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ INSTRUCTOR STRIP ══════ -->
+<div class="instructor-strip">
+  <div class="instructor-avatar">고</div>
+  <div>
+    <div class="instructor-name">고연심 (샤블리)</div>
+    <div class="instructor-title-text">딥컴퍼스AI연구소 소장 · AI 생산성 전문가 & AI 컨설턴트</div>
+    <div class="instructor-desc">
+      문화예술학 박사 · 20년+ 디지털 신기술 교육 전문가.<br>
+      메타버스·NFT부터 생성형 AI·AI 에이전트까지 현장 최전선에서 강의해 온
+      실전 전문가. 공공기관·기업·지자체 대상 AI 교육·컨설팅 다수 수행.
+      생성형 AI 분야 저서 5권 출간.
+    </div>
+    <div class="badge-row">
+      <span class="ibadge">문화예술학 박사</span>
+      <span class="ibadge">AI 저서 5권</span>
+      <span class="ibadge">B2B 컨설턴트</span>
+      <span class="ibadge">20년 강의 경력</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ Z-POINT 4: BOTTOM-RIGHT CTA ══════ -->
+<section class="cta-section" id="cta-anchor">
+  <h2 class="cta-headline">
+    지금 신청하고<br>
+    <span class="accent">AI로 날아오를 준비</span>를 하세요
+  </h2>
+  <p class="cta-sub">
+    마감 임박 · 선착순 마감<br>
+    신청 완료 후 줌(Zoom) 링크와 사전 자료를 즉시 발송해 드립니다.
+  </p>
+  <a href="mailto:deepcompass@ai.com" class="cta-main">
+    👉 지금 바로 특강 신청하고 줌 링크 받기
+    <span class="cta-arrow">→</span>
+  </a>
+  <div class="cta-detail">
+    <div class="cta-detail-item"><span class="dot">●</span> 2026. 05. 29 (금) 10:00~18:00</div>
+    <div class="cta-detail-item"><span class="dot">●</span> 선릉 더모임 B1 + Zoom 동시</div>
+    <div class="cta-detail-item"><span class="dot">●</span> 수강료 30만 원</div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 딥컴퍼스AI연구소 · DeepCompass AI Research Institute</span>
+  <span>문의: deepcompass.ai | 강사: 고연심(샤블리)</span>
+</footer>
+
+</body>
+</html>
